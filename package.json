@@ -1,0 +1,51 @@
+{
+  "name": "@ontola/link-devtools",
+  "version": "1.0.0",
+  "description": "Devtools for link-redux",
+  "main": "dist/LinkDevTools.cjs",
+  "module": "dist/LinkDevTools.js",
+  "types": "dist/LinkDevTools.d.ts",
+  "scripts": {
+    "clean": "rm -f ./dist/*",
+    "build": "yarn clean && yarn build:lib && yarn build:types",
+    "build:lib": "rollup --config rollup.config.js ./src/LinkDevTools.ts",
+    "build:types": "tsc --declaration --lib es2020,dom --target es5 --outDir dist/ src/LinkDevTools.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ontola/link-devtools.git"
+  },
+  "keywords": [
+    "link-lib",
+    "link-redux",
+    "rdf",
+    "linked-data",
+    "linked-delta"
+  ],
+  "author": "Fletcher91 <thom@ontola.io>",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/ontola/link-devtools/issues"
+  },
+  "homepage": "https://github.com/ontola/link-devtools#readme",
+  "devDependencies": {
+    "@ontologies/core": "^1.5.0",
+    "@types/react": "^16.9.5",
+    "link-lib": "^1.0.0-rc4",
+    "link-redux": "^1.0.0-rc4.6",
+    "rdflib": "^1.0.4",
+    "rollup": "^1.23.1",
+    "rollup-plugin-typescript": "^1.0.1",
+    "tslib": "^1.10.0",
+    "typescript": "^3.6.3"
+  },
+  "peerDependencies": {
+    "@ontologies/core": ">=1.5.0",
+    "link-lib": ">=1.0.0-rc4",
+    "link-redux": ">=1.0.0-rc4.6",
+    "rdflib": ">=1.0.4"
+  },
+  "dependencies": {
+    "type-zoo": ">=3.4.1"
+  }
+}
