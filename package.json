@@ -1,15 +1,16 @@
 {
   "name": "@ontola/link-devtools",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Devtools for link-redux",
   "main": "dist/LinkDevTools.cjs",
   "module": "dist/LinkDevTools.js",
   "types": "dist/LinkDevTools.d.ts",
   "scripts": {
-    "clean": "rm -f ./dist/*",
-    "build": "yarn clean && yarn build:lib && yarn build:types",
+    "clean": "rm -rf ./dist/extension/* && rm -f ./dist/package/*",
+    "build": "yarn clean && yarn build:extension && yarn build:lib && yarn build:types",
+    "build:extension": "webpack",
     "build:lib": "rollup --config rollup.config.js ./src/LinkDevTools.ts",
-    "build:types": "tsc --declaration --lib es2020,dom --target es5 --outDir dist/ src/LinkDevTools.ts"
+    "build:types": "tsc --declaration --lib es2020,dom --target es5 --outDir dist/package/ src/LinkDevTools.ts"
   },
   "repository": {
     "type": "git",
@@ -29,15 +30,27 @@
   },
   "homepage": "https://github.com/ontola/link-devtools#readme",
   "devDependencies": {
-    "@ontologies/core": "^1.5.0",
-    "@types/react": "^16.9.5",
-    "link-lib": "^1.0.0-rc4",
-    "link-redux": "^1.0.0-rc4.6",
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "@babel/preset-react": "^7.6.3",
+    "@material-ui/core": "^4.5.2",
+    "@ontologies/core": "=1.5.2-strict-15",
+    "@types/react": "^16.9.11",
+    "babel-loader": "^8.0.6",
+    "copy-webpack-plugin": "^5.0.4",
+    "link-lib": "=1.0.0-rc4-datafactory-6",
+    "link-redux": "=1.0.0-rc4-datafactory-5",
     "rdflib": "^1.0.4",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
+    "react-json-view": "^1.19.1",
     "rollup": "^1.23.1",
     "rollup-plugin-typescript": "^1.0.1",
     "tslib": "^1.10.0",
-    "typescript": "^3.6.3"
+    "typescript": "^3.6.3",
+    "webextension-polyfill": "^0.5.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9"
   },
   "peerDependencies": {
     "@ontologies/core": ">=1.5.0",

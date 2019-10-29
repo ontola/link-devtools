@@ -10,7 +10,7 @@ const esm = {
   ...base,
   output: {
     format: "esm",
-    file: "./dist/LinkDevTools.js",
+    file: "./dist/package/LinkDevTools.js",
   }
 }
 
@@ -18,7 +18,7 @@ const cjs = {
   ...base,
   output: {
     format: "cjs",
-    file: "./dist/LinkDevTools.cjs",
+    file: "./dist/package/LinkDevTools.cjs",
   }
 }
 

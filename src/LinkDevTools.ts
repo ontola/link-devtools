@@ -18,27 +18,76 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import rdfFactory, { createNS, globalFactory, globalSymbol } from '@ontologies/core';
+import rdfFactory, {
+  createNS,
+  globalFactory,
+  globalSymbol,
+  isBlankNode,
+  isNamedNode,
+  PlainFactory,
+  Quad,
+  Quadruple,
+} from "@ontologies/core";
 import * as LinkLib from 'link-lib';
 import * as LinkRedux from 'link-redux';
-import rdf from 'rdflib';
 
 declare var $r: any;
 declare global {
   interface Window {
     LRS: LinkLib.LinkedRenderStore<any>;
     __REACT_DEVTOOLS_GLOBAL_HOOK__: any;
+    __LINK_DEVTOOLS_GLOBAL_HOOK__: any;
     dev: LinkDevTools;
   }
 }
 
 class LinkDevTools {
   private readonly rDevTools: any;
-  private readonly globalName: string
+  private readonly globalName: string;
+  private readonly lrs: LinkRedux.LinkReduxLRSType;
 
-  constructor(reactDevTools = undefined, globalName = 'dev') {
+  constructor(reactDevTools = undefined, globalName = 'dev', lrs = window.LRS) {
     this.rDevTools = reactDevTools;
     this.globalName = globalName;
+    this.lrs = lrs;
+
+    window.__LINK_DEVTOOLS_GLOBAL_HOOK__ = {
+      factory: new PlainFactory(),
+      test: (...args) => console.log(...args),
+      deltaProcessor: (delta) => {
+        console.log('DEVTOOL LOG', delta);
+        window.postMessage({
+          extension: "link-devtools",
+          type: "delta",
+          data: delta,
+        }, "*");
+        window.postMessage({
+          extension: "link-devtools",
+          type: "data",
+          data: (lrs as any)
+            .store
+            .store
+            .statements
+            .map((s) => window.__LINK_DEVTOOLS_GLOBAL_HOOK__.factory.fromQuad(s)),
+        }, "*");
+      },
+    };
+
+    this.lrs.deltaProcessors.unshift({
+      flush(): Quad[] {
+        return [];
+      },
+
+      queueDelta(delta: Quadruple[], subjects: number[]): void {
+        console.log(delta, subjects);
+      },
+
+      processDelta(delta: Quadruple[]): Quad[] {
+        console.log(delta);
+        window.__LINK_DEVTOOLS_GLOBAL_HOOK__.deltaProcessor(delta);
+        return [];
+      },
+    });
   }
 
   get $r() {
@@ -73,7 +122,7 @@ class LinkDevTools {
       return console.error('No component selected in react devtools (check the value of `$r`)');
     }
     let subject;
-    if (comp instanceof rdf.NamedNode || comp instanceof rdf.BlankNode) {
+    if (isNamedNode(comp) || isBlankNode(comp)) {
       subject = comp;
     } else {
       if (typeof comp.props === 'undefined') {
@@ -86,7 +135,7 @@ class LinkDevTools {
     }
     if (typeof subject === 'string') {
       console.debug('Normalizing passed subject into NamedNode');
-      subject = new rdf.NamedNode(subject);
+      subject = rdfFactory.namedNode(subject);
     }
 
     return lrs.tryEntity(subject);
@@ -114,7 +163,7 @@ class LinkDevTools {
     };
   }
 
-  toObject(arr = this.dataArr, denormalize = true) {
+  toObject(arr: Quad[] | void = this.dataArr(), denormalize = true) {
     if (!Array.isArray(arr)) {
       return console.error('Pass an array of statements to process');
     }
@@ -126,8 +175,8 @@ class LinkDevTools {
     const obj = {};
     for (let i = 0; i < arr.length; i++) {
       const cur = arr[i];
-      const subj = cur.subject.toString();
-      const pred = cur.predicate.toString();
+      const subj = rdfFactory.toNQ(cur.subject);
+      const pred = rdfFactory.toNQ(cur.predicate);
       if (typeof obj[subj] === 'undefined') {
         obj[subj] = {};
       }
@@ -156,9 +205,9 @@ class LinkDevTools {
     const lrs = this.getLRS();
     let node = resource;
     if (typeof resource === 'number') {
-      node = rdf.Term.termByStoreIndex(resource);
+      node = rdfFactory.fromId(resource);
     } else if (typeof resource === 'string') {
-      node = new rdf.NamedNode(resource);
+      node = rdfFactory.namedNode(resource);
     }
 
     return this.toObject(lrs.tryEntity(node));
@@ -200,7 +249,7 @@ class LinkDevTools {
 
   // eslint-disable-next-line class-methods-use-this
   get rdf() {
-    return rdf;
+    return LinkLib.rdflib;
   }
 
   get rdfFactory() {

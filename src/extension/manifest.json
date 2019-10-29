@@ -1,0 +1,29 @@
+{
+  "name": "Link Devtools",
+  "author": "Fletcher91 <thom@ontola.io>",
+
+  "background": {
+    "persistent": true,
+    "scripts": [
+      "browser-polyfill.min.js",
+      "background.js"
+    ]
+  },
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*"],
+    "js": [
+      "browser-polyfill.min.js",
+      "content.js"
+    ]
+  }],
+  "devtools_page": "devtools.html",
+  "icons": {
+    "24": "icons/webhook-24.png",
+    "48": "icons/webhook-48.png"
+  },
+  "manifest_version": 2,
+  "permissions": [
+    "activeTab"
+  ],
+  "version": "1.0.0"
+}
