@@ -1,5 +1,7 @@
 # link-devtools
 
+Browser console debugging features for [Link-Redux](https://github.com/fletcher91/link-redux/) projects.
+
 ## Installation
 ### Get the React devtools
 First install the react devtools if you haven't got them already.
