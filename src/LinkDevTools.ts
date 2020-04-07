@@ -18,16 +18,8 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import rdfFactory, {
-  createNS,
-  globalFactory,
-  globalSymbol,
-  isBlankNode,
-  isNamedNode,
-  PlainFactory,
-  Quad,
-  Quadruple,
-} from "@ontologies/core";
+import rdf, { isBlankNode, isNamedNode } from "@ontologies/core";
+import * as RdfFactory from "@ontologies/core";
 import * as LinkLib from 'link-lib';
 import * as LinkRedux from 'link-redux';
 
@@ -37,7 +29,7 @@ declare global {
     LRS: LinkLib.LinkedRenderStore<any>;
     __REACT_DEVTOOLS_GLOBAL_HOOK__: any;
     __LINK_DEVTOOLS_GLOBAL_HOOK__: any;
-    dev: LinkDevTools;
+    dev: any & LinkDevTools;
   }
 }
 
@@ -46,48 +38,47 @@ class LinkDevTools {
   private readonly globalName: string;
   private readonly lrs: LinkRedux.LinkReduxLRSType;
 
-  constructor(reactDevTools = undefined, globalName = 'dev', lrs = window.LRS) {
+  constructor(reactDevTools = undefined, globalName = 'dev', lrs = window.LRS, enableExtension = false) {
     this.rDevTools = reactDevTools;
     this.globalName = globalName;
     this.lrs = lrs;
 
-    window.__LINK_DEVTOOLS_GLOBAL_HOOK__ = {
-      factory: new PlainFactory(),
-      test: (...args) => console.log(...args),
-      deltaProcessor: (delta) => {
-        console.log('DEVTOOL LOG', delta);
-        window.postMessage({
-          extension: "link-devtools",
-          type: "delta",
-          data: delta,
-        }, "*");
-        window.postMessage({
-          extension: "link-devtools",
-          type: "data",
-          data: (lrs as any)
-            .store
-            .store
-            .statements
-            .map((s) => window.__LINK_DEVTOOLS_GLOBAL_HOOK__.factory.fromQuad(s)),
-        }, "*");
-      },
-    };
+    if (process.env.NODE_ENV === "development") {
+      window.__LINK_DEVTOOLS_GLOBAL_HOOK__ = {
+        factory: new RdfFactory.PlainFactory(),
+        deltaProcessor: (delta) => {
+          window.postMessage({
+            extension: "link-devtools",
+            type: "delta",
+            data: delta,
+          }, "*");
+          window.postMessage({
+            extension: "link-devtools",
+            type: "data",
+            data: (lrs as any)
+              .store
+              .store
+              .quads
+              .map((s) => window.__LINK_DEVTOOLS_GLOBAL_HOOK__.factory.fromQuad(s)),
+          }, "*");
+        },
+      };
 
-    this.lrs.deltaProcessors.unshift({
-      flush(): Quad[] {
-        return [];
-      },
+      if (enableExtension) {
+        this.lrs.deltaProcessors.unshift({
+          flush(): RdfFactory.Quad[] {
+            return [];
+          },
 
-      queueDelta(delta: Quadruple[], subjects: number[]): void {
-        console.log(delta, subjects);
-      },
+          queueDelta(delta: RdfFactory.Quadruple[], subjects: number[]): void {},
 
-      processDelta(delta: Quadruple[]): Quad[] {
-        console.log(delta);
-        window.__LINK_DEVTOOLS_GLOBAL_HOOK__.deltaProcessor(delta);
-        return [];
-      },
-    });
+          processDelta(delta: RdfFactory.Quadruple[]): RdfFactory.Quad[] {
+            window.__LINK_DEVTOOLS_GLOBAL_HOOK__.deltaProcessor(delta);
+            return [];
+          },
+        });
+      }
+    }
   }
 
   get $r() {
@@ -105,9 +96,6 @@ class LinkDevTools {
    */
   getLRS(comp = this.$r) {
     const lrs = comp && comp.props && comp.props.lrs;
-    if (typeof lrs === 'undefined') {
-      console.warn('Component `lrs` prop is undefined, recovering by using global (you should still fix this)');
-    }
 
     return lrs || window.LRS;
   }
@@ -135,7 +123,7 @@ class LinkDevTools {
     }
     if (typeof subject === 'string') {
       console.debug('Normalizing passed subject into NamedNode');
-      subject = rdfFactory.namedNode(subject);
+      subject = rdf.namedNode(subject);
     }
 
     return lrs.tryEntity(subject);
@@ -163,7 +151,7 @@ class LinkDevTools {
     };
   }
 
-  toObject(arr: Quad[] | void = this.dataArr(), denormalize = true) {
+  toObject(arr: RdfFactory.Quad[] | void = this.dataArr(), denormalize = true) {
     if (!Array.isArray(arr)) {
       return console.error('Pass an array of statements to process');
     }
@@ -175,8 +163,8 @@ class LinkDevTools {
     const obj = {};
     for (let i = 0; i < arr.length; i++) {
       const cur = arr[i];
-      const subj = rdfFactory.toNQ(cur.subject);
-      const pred = rdfFactory.toNQ(cur.predicate);
+      const subj = rdf.toNQ(cur.subject);
+      const pred = rdf.toNQ(cur.predicate);
       if (typeof obj[subj] === 'undefined') {
         obj[subj] = {};
       }
@@ -205,9 +193,9 @@ class LinkDevTools {
     const lrs = this.getLRS();
     let node = resource;
     if (typeof resource === 'number') {
-      node = rdfFactory.fromId(resource);
+      node = rdf.fromId(resource);
     } else if (typeof resource === 'string') {
-      node = rdfFactory.namedNode(resource);
+      node = rdf.namedNode(resource);
     }
 
     return this.toObject(lrs.tryEntity(node));
@@ -247,21 +235,16 @@ class LinkDevTools {
     return LinkRedux;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   get rdf() {
-    return LinkLib.rdflib;
-  }
-
-  get rdfFactory() {
-    return rdfFactory;
+    return rdf;
   }
 
   get createNS() {
-    return createNS;
+    return RdfFactory.createNS;
   }
 
-  get test() {
-    return { globalFactory, globalSymbol }
+  get rdfFactory() {
+    return RdfFactory;
   }
 
   get reload() {
