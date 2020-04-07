@@ -113,10 +113,12 @@ class LinkDevTools {
     if (isNamedNode(comp) || isBlankNode(comp)) {
       subject = comp;
     } else {
-      if (typeof comp.props === 'undefined') {
-        return LinkDevTools.returnWithError('Object has no props');
+      if (typeof comp.props !== 'undefined') {
+        subject = comp.props.subject;
       }
-      subject = comp.props.object || comp.props.subject;
+      if (typeof subject === 'undefined' && typeof comp.hooks !== 'undefined') {
+        subject = $r.hooks.find(a => a.name === "LinkRenderContext")?.subHooks?.[0]?.value?.subject;
+      }
     }
     if (typeof subject === 'undefined') {
       return LinkDevTools.returnWithError('No subject or object found (check the value of `$r`)');
