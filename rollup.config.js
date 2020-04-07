@@ -1,13 +1,9 @@
-import typescript from 'rollup-plugin-typescript'
-
-const base = {
-  plugins: [
-    typescript(),
-  ]
-}
+import typescript from 'rollup-plugin-typescript2'
 
 const esm = {
-  ...base,
+  plugins: [
+    typescript(),
+  ],
   output: {
     format: "esm",
     file: "./dist/package/LinkDevTools.js",
@@ -15,7 +11,13 @@ const esm = {
 }
 
 const cjs = {
-  ...base,
+  plugins: [
+    typescript({
+      tsconfigOverride: {
+        declaration: false,
+      }
+    }),
+  ],
   output: {
     format: "cjs",
     file: "./dist/package/LinkDevTools.cjs",
