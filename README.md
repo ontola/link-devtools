@@ -8,31 +8,36 @@ First install the react devtools if you haven't got them already.
 
 [Firefox](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/)
 
-### Enable the Link devtools
+### Installation and Usage
+
+`yarn add @ontola/link-devtools` V `npm i @ontola/link-devtools`
 
 Add the following to the place where your LinkedRenderStore is initialized;
 
 ```javascript
-import lrs from '../helpers/lrs';
+import { createStore } from 'link-redux';
+import enableDevtools from '@ontola/link-devtools'
 
-if (typeof window !== 'undefined') {
-  window.LRS = lrs;
-  if (typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined') {
-    window.dev = new LinkDevTools();
-  }
-}
+// Wherever
+const lrs = createStore();
+enableDevtools(lrs);
 ```
 
-CAUTION: `lrs` should be an **instance** (i.e. the return value from `new LinkedRenderStore()`), not the class.
-
-## Usage
-
 The `dev` object should now be present when loading your app.
+
+```javascript
+dev.help // Will output the available commands
+```
+
+If `dev` is undefined, please check that the react devtools are in fact installed and enabled in
+your current browser session.
+
+Note: These methods are convenience methods, please do not use or depend on them in your code!
 
 #### dev.help
 Try calling `dev.help` to see all available commands.
 
-#### dev.obj(iri: string | NamedNode)
+#### dev.obj(iri: string | number | NamedNode)
 The `dev.obj()` function can take an URL as a string or NamedNode and will show the data currently in the store.
 
 #### dev.data

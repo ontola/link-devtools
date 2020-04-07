@@ -15,6 +15,14 @@
     "type": "git",
     "url": "git+https://github.com/ontola/link-devtools.git"
   },
+  "files": [
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "yarn.lock",
+    "tsconfig.json",
+    "dist/package"
+  ],
   "keywords": [
     "link-lib",
     "link-redux",

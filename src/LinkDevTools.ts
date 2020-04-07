@@ -33,12 +33,18 @@ declare global {
   }
 }
 
-class LinkDevTools {
+export class LinkDevTools {
   private readonly rDevTools: any;
   private readonly globalName: string;
-  private readonly lrs: LinkRedux.LinkReduxLRSType;
 
-  constructor(reactDevTools = undefined, globalName = 'dev', lrs = window.LRS, enableExtension = false) {
+  public readonly lrs: LinkRedux.LinkReduxLRSType;
+
+  constructor(
+    lrs = window.LRS,
+    globalName = 'dev',
+    enableExtension = false,
+    reactDevTools = undefined
+  ) {
     this.rDevTools = reactDevTools;
     this.globalName = globalName;
     this.lrs = lrs;
@@ -94,10 +100,10 @@ class LinkDevTools {
    * @param {React.Element} comp Component to get the LRS from.
    * @return {LinkedRenderStore|undefined} Resolved LinkedRenderStore if any.
    */
-  getLRS(comp = this.$r) {
-    const lrs = comp && comp.props && comp.props.lrs;
+  public getLRS(comp = this.$r) {
+    const lrs = comp?.hooks.find(a => a.name === "LRS")?.subHooks?.[0];
 
-    return lrs || window.LRS;
+    return lrs || this.lrs || window.LRS;
   }
 
   static returnWithError(msg = undefined) {
@@ -105,30 +111,12 @@ class LinkDevTools {
   }
 
   dataArr(comp = this.$r) {
-    const lrs = this.getLRS(comp);
-    if (typeof comp === 'undefined') {
-      return console.error('No component selected in react devtools (check the value of `$r`)');
-    }
-    let subject;
-    if (isNamedNode(comp) || isBlankNode(comp)) {
-      subject = comp;
-    } else {
-      if (typeof comp.props !== 'undefined') {
-        subject = comp.props.subject;
-      }
-      if (typeof subject === 'undefined' && typeof comp.hooks !== 'undefined') {
-        subject = $r.hooks.find(a => a.name === "LinkRenderContext")?.subHooks?.[0]?.value?.subject;
-      }
-    }
+    const subject = this.currentSubject(comp);
     if (typeof subject === 'undefined') {
       return LinkDevTools.returnWithError('No subject or object found (check the value of `$r`)');
     }
-    if (typeof subject === 'string') {
-      console.debug('Normalizing passed subject into NamedNode');
-      subject = rdf.namedNode(subject);
-    }
 
-    return lrs.tryEntity(subject);
+    return this.lrs.tryEntity(subject);
   }
 
   showProp(func) {
@@ -337,6 +325,40 @@ class LinkDevTools {
       property
     );
   }
+
+  private currentSubject(comp): RdfFactory.NamedNode {
+    if (typeof comp === 'undefined') {
+      throw console.error('No component selected in react devtools (check the value of `$r`)');
+    }
+    let subject;
+    if (isNamedNode(comp) || isBlankNode(comp)) {
+      subject = comp;
+    } else {
+      if (typeof comp.props !== 'undefined') {
+        subject = comp.props.subject;
+      }
+      if (typeof subject === 'undefined' && typeof comp.hooks !== 'undefined') {
+        subject = $r.hooks.find(a => a.name === "LinkRenderContext")?.subHooks?.[0]?.value?.subject;
+      }
+    }
+
+    if (typeof subject === 'string') {
+      console.debug('Normalizing passed subject into NamedNode');
+      subject = rdf.namedNode(subject);
+    }
+
+    return subject;
+  }
 }
 
-export default LinkDevTools;
+const enableDevtools = (lrs: LinkRedux.LinkReduxLRSType, globalName: string = 'dev') => {
+  if (typeof window !== 'undefined') {
+    const devtools = new LinkDevTools(lrs, globalName, false);
+
+    if (process.env.NODE_ENV === 'development') {
+      window[globalName] = devtools;
+    }
+  }
+};
+
+export default enableDevtools;
