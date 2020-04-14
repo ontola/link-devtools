@@ -1,6 +1,6 @@
 {
   "name": "@ontola/link-devtools",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Devtools for link-redux",
   "main": "dist/package/LinkDevTools.cjs",
   "module": "dist/package/LinkDevTools.js",
