@@ -103,7 +103,7 @@ export class LinkDevTools {
   public getLRS(comp = this.$r) {
     const lrs = comp?.hooks.find(a => a.name === "LRS")?.subHooks?.[0];
 
-    return lrs || this.lrs || window.LRS;
+    return lrs?.value || this.lrs || window.LRS;
   }
 
   static returnWithError(msg = undefined) {
