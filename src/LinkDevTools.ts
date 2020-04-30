@@ -101,7 +101,7 @@ export class LinkDevTools {
    * @return {LinkedRenderStore|undefined} Resolved LinkedRenderStore if any.
    */
   public getLRS(comp = this.$r) {
-    const lrs = comp?.hooks.find(a => a.name === "LRS")?.subHooks?.[0];
+    const lrs = comp?.hooks?.find(a => a.name === "LRS")?.subHooks?.[0];
 
     return lrs?.value || this.lrs || window.LRS;
   }
